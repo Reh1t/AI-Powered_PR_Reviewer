@@ -15,22 +15,20 @@ from app.core.config import settings
 async def run_test():
     """
     Test script to verify GithubService interaction with real API endpoints.
-    Requires GITHUB_TOKEN to be set in .env!
+    Uses the GitHub App credentials from .env.
     """
-    token = settings.github_token
-    if not token or token == "your_github_token_here":
-        print("ERROR: Please set a valid GITHUB_TOKEN in your .env file to run this test.")
+    if not settings.github_app_id or not settings.github_app_private_key:
+        print("ERROR: Please set GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY in your .env file.")
         return
 
     # Using a popular public repo and PR as a test target
-    # e.g., fastapi repo, PR #10000 (Replace with any known PR)
     owner = "tiangolo"
     repo = "fastapi"
     pr_number = 15375
     
     try:
-        service = GithubService(token=token)
-        print(f"Fetching PR files for {owner}/{repo}#{pr_number}...")
+        service = GithubService()
+        print(f"Attempting to fetch PR files for {owner}/{repo}#{pr_number} using App Auth...")
         files = await service.get_pr_diff(owner, repo, pr_number)
         
         print(f"\nSuccessfully fetched {len(files)} files!")

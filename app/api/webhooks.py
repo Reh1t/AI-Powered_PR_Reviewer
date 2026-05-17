@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Request
 import logging
 from app.api.dependencies import verify_github_signature
 from app.services.github_service import GithubService
-from app.core.config import settings
 
 # Setup basic logger
 logger = logging.getLogger("webhook-router")

@@ -2,7 +2,7 @@ import httpx
 import logging
 import jwt
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from app.core.config import settings
 
 logger = logging.getLogger("github-service")
@@ -117,8 +117,8 @@ class GithubService:
             return patch
 
         lines = patch.split('\n')
-        hunks = []
-        current_hunk = []
+        hunks: List[List[str]] = []
+        current_hunk: List[str] = []
         
         # Isolate individual change fragments (hunks) by @@ headers
         for line in lines:
@@ -178,7 +178,7 @@ class GithubService:
         """
         url = f"{self.BASE_URL}/repos/{owner}/{repo}/pulls/{pull_number}/reviews"
         
-        payload = {
+        payload: Dict[str, Any] = {
             "commit_id": commit_id,
             "event": event
         }
@@ -198,3 +198,4 @@ class GithubService:
                 response.raise_for_status()
                 
             return response.json()
+
