@@ -14,6 +14,7 @@ Supports:
 import subprocess
 import sys
 import json
+import platform
 from pathlib import Path
 from datetime import datetime
 
@@ -70,8 +71,18 @@ def detect_test_framework(project_path: Path) -> dict:
     if (project_path / "pyproject.toml").exists() or (project_path / "requirements.txt").exists():
         result["type"] = "python"
         result["framework"] = "pytest"
-        result["cmd"] = ["python", "-m", "pytest", "-v"]
-        result["coverage_cmd"] = ["python", "-m", "pytest", "--cov", "--cov-report=term-missing"]
+        
+        python_exe = "python"
+        venv_bin = "Scripts" if platform.system() == "Windows" else "bin"
+        venv_python = project_path / "venv" / venv_bin / "python"
+        if platform.system() == "Windows":
+            venv_python = venv_python.with_suffix(".exe")
+        
+        if venv_python.exists():
+            python_exe = str(venv_python)
+            
+        result["cmd"] = [python_exe, "-m", "pytest", "-v"]
+        result["coverage_cmd"] = [python_exe, "-m", "pytest", "--cov", "--cov-report=term-missing"]
     
     return result
 

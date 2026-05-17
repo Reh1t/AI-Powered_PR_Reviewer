@@ -46,11 +46,21 @@ def detect_project_type(project_path: Path) -> dict:
             if "lint" in scripts:
                 result["linters"].append({"name": "npm lint", "cmd": ["npm", "run", "lint"]})
             elif "eslint" in deps:
-                result["linters"].append({"name": "eslint", "cmd": ["npx", "eslint", "."]})
+                eslint_path = project_path / "node_modules" / ".bin" / "eslint"
+                if platform.system() == "Windows":
+                    eslint_path = eslint_path.with_suffix(".cmd")
+                
+                cmd = [str(eslint_path)] if eslint_path.exists() else ["npx", "eslint"]
+                result["linters"].append({"name": "eslint", "cmd": cmd + ["."]})
             
             # Check for TypeScript
             if "typescript" in deps or (project_path / "tsconfig.json").exists():
-                result["linters"].append({"name": "tsc", "cmd": ["npx", "tsc", "--noEmit"]})
+                tsc_path = project_path / "node_modules" / ".bin" / "tsc"
+                if platform.system() == "Windows":
+                    tsc_path = tsc_path.with_suffix(".cmd")
+                
+                cmd = [str(tsc_path)] if tsc_path.exists() else ["npx", "tsc"]
+                result["linters"].append({"name": "tsc", "cmd": cmd + ["--noEmit"]})
                 
         except:
             pass
@@ -60,11 +70,29 @@ def detect_project_type(project_path: Path) -> dict:
         result["type"] = "python"
         
         # Check for ruff
-        result["linters"].append({"name": "ruff", "cmd": ["ruff", "check", "."]})
+        ruff_cmd = ["ruff", "check", "."]
+        # Look for ruff in venv
+        venv_bin = "Scripts" if platform.system() == "Windows" else "bin"
+        venv_ruff = project_path / "venv" / venv_bin / "ruff"
+        if platform.system() == "Windows":
+            venv_ruff = venv_ruff.with_suffix(".exe")
+            
+        if venv_ruff.exists():
+            ruff_cmd = [str(venv_ruff), "check", "."]
+        
+        result["linters"].append({"name": "ruff", "cmd": ruff_cmd})
         
         # Check for mypy
         if (project_path / "mypy.ini").exists() or (project_path / "pyproject.toml").exists():
-            result["linters"].append({"name": "mypy", "cmd": ["mypy", "."]})
+            mypy_cmd = ["mypy", "."]
+            venv_mypy = project_path / "venv" / venv_bin / "mypy"
+            if platform.system() == "Windows":
+                venv_mypy = venv_mypy.with_suffix(".exe")
+            
+            if venv_mypy.exists():
+                mypy_cmd = [str(venv_mypy), "."]
+                
+            result["linters"].append({"name": "mypy", "cmd": mypy_cmd})
     
     return result
 
