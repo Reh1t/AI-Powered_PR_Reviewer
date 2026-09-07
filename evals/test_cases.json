@@ -1,0 +1,162 @@
+[
+    {
+        "id": "SEC_01",
+        "name": "Blatant SQL Injection",
+        "diff": "@@ -1,3 +1,3 @@\n def get_user(u_id):\n-    return db.execute('SELECT * FROM users WHERE id = ?', (u_id,))\n+    return db.execute(f'SELECT * FROM users WHERE id = {u_id}')",
+        "expected_security_min": 1,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "SEC_02",
+        "name": "Hardcoded AWS Secret",
+        "diff": "@@ -1,2 +1,3 @@\n def init_s3():\n+    aws_key = 'AKIAIOSFODNN7EXAMPLE'\n     return boto3.client('s3')",
+        "expected_security_min": 1,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "SEC_03",
+        "name": "Cross-Site Scripting (XSS)",
+        "diff": "@@ -5,2 +5,2 @@\n def render_profile(user_bio):\n-    return Markup.escape(user_bio)\n+    return f'<div>{user_bio}</div>'",
+        "expected_security_min": 1,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "SEC_04",
+        "name": "Path Traversal",
+        "diff": "@@ -2,2 +2,2 @@\n def get_file(filename):\n-    return safe_read(BASE_DIR / filename)\n+    return open(f'/var/www/uploads/{filename}').read()",
+        "expected_security_min": 1,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "SEC_05",
+        "name": "Insecure MD5 Hashing",
+        "diff": "@@ -1,3 +1,3 @@\n import hashlib\n def hash_password(pwd):\n-    return bcrypt.hashpw(pwd, bcrypt.gensalt())\n+    return hashlib.md5(pwd.encode()).hexdigest()",
+        "expected_security_min": 1,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "PERF_01",
+        "name": "N+1 Database Query",
+        "diff": "@@ -1,4 +1,4 @@\n def get_posts():\n     users = User.objects.all()\n-    return Post.objects.select_related('user').filter(user__in=users)\n+    return [user.post_set.all() for user in users]",
+        "expected_security_min": 0,
+        "expected_perf_min": 1,
+        "expected_style_max": 0
+    },
+    {
+        "id": "PERF_02",
+        "name": "O(n^2) List Intersection",
+        "diff": "@@ -1,3 +1,3 @@\n def find_common(list_a, list_b):\n-    return list(set(list_a) & set(list_b))\n+    return [x for x in list_a if x in list_b]",
+        "expected_security_min": 0,
+        "expected_perf_min": 1,
+        "expected_style_max": 0
+    },
+    {
+        "id": "PERF_03",
+        "name": "Inefficient String Concatenation",
+        "diff": "@@ -1,4 +1,4 @@\n def build_csv(rows):\n-    return ','.join(rows)\n+    res = ''\n+    for r in rows: res += r + ','\n+    return res",
+        "expected_security_min": 0,
+        "expected_perf_min": 1,
+        "expected_style_max": 0
+    },
+    {
+        "id": "PERF_04",
+        "name": "Reading massive file into memory",
+        "diff": "@@ -1,3 +1,3 @@\n def count_lines(filepath):\n-    return sum(1 for _ in open(filepath))\n+    return len(open(filepath).readlines())",
+        "expected_security_min": 0,
+        "expected_perf_min": 1,
+        "expected_style_max": 0
+    },
+    {
+        "id": "PERF_05",
+        "name": "Missing Database Index (Contextual)",
+        "diff": "@@ -10,2 +10,2 @@\n class Log(Base):\n-    timestamp = Column(DateTime, index=True)\n+    timestamp = Column(DateTime) # Removing index to save space",
+        "expected_security_min": 0,
+        "expected_perf_min": 1,
+        "expected_style_max": 0
+    },
+    {
+        "id": "STYLE_01",
+        "name": "Poor Variable Naming",
+        "diff": "@@ -1,2 +1,2 @@\n-def calculate_total(price, tax_rate):\n-    return price * (1 + tax_rate)\n+def calc(p, t):\n+    return p * (1 + t)",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_min": 1
+    },
+    {
+        "id": "STYLE_02",
+        "name": "Magic Numbers",
+        "diff": "@@ -1,3 +1,3 @@\n-MAX_RETRIES = 3\n def connect():\n-    for i in range(MAX_RETRIES):\n+    for i in range(3):\n         pass",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_min": 1
+    },
+    {
+        "id": "STYLE_03",
+        "name": "Missing Type Hints",
+        "diff": "@@ -1,2 +1,2 @@\n-def parse_data(payload: dict) -> list:\n+def parse_data(payload):\n     return payload.get('items', [])",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_min": 1
+    },
+    {
+        "id": "STYLE_04",
+        "name": "Bare Except Clause",
+        "diff": "@@ -1,4 +1,4 @@\n def fetch_url(url):\n     try:\n         return requests.get(url)\n-    except requests.RequestException:\n+    except:\n         return None",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_min": 1
+    },
+    {
+        "id": "STYLE_05",
+        "name": "Unused Import",
+        "diff": "@@ -1,2 +1,3 @@\n import os\n+import sys\n def get_cwd():\n     return os.getcwd()",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_min": 1
+    },
+    {
+        "id": "TRAP_01",
+        "name": "The Perfect PR",
+        "diff": "@@ -1,2 +1,2 @@\n-def add(a, b):\n-    return a + b\n+def add(a: int, b: int) -> int:\n+    return a + b",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "TRAP_02",
+        "name": "Mocked Secret in Tests (Not a real secret)",
+        "diff": "@@ -1,3 +1,3 @@\n def test_s3_upload():\n-    pass\n+    mock_aws_key = 'AKIAIOSFODNN7EXAMPLE'\n+    assert len(mock_aws_key) == 20",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "TRAP_03",
+        "name": "Safe use of eval (in a strictly controlled test environment)",
+        "diff": "@@ -1,2 +1,2 @@\n def test_math_ast():\n-    assert safe_eval('1+1') == 2\n+    assert eval('1+1') == 2",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "TRAP_04",
+        "name": "Safe dynamic query (Building a string but passing values as params)",
+        "diff": "@@ -1,3 +1,3 @@\n def search(term):\n-    q = 'SELECT * FROM items'\n+    q = 'SELECT * FROM items WHERE name = ?'\n     return db.execute(q, (term,))",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    },
+    {
+        "id": "TRAP_05",
+        "name": "Todo comment (No actual code issue)",
+        "diff": "@@ -1,2 +1,2 @@\n def process_payment():\n-    return True\n+    # TODO: Add webhook notification here later\n+    return True",
+        "expected_security_min": 0,
+        "expected_perf_max": 0,
+        "expected_style_max": 0
+    }
+]

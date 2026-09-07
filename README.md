@@ -1,15 +1,19 @@
 # 🛡️ AI-Powered PR Reviewer: Enterprise-Grade AppSec Bot
 
-An autonomous, agentic code reviewer engineered to act as a virtual **Senior Application Security Engineer**. This system intercepts Pull Requests in real-time via GitHub Webhooks, analyzes code changes using high-speed LLMs (Llama 3.3 via Groq), and publishes context-aware, batched reviews directly to GitHub.
+> 🚀 **V2 Architecture: Fully Local & Agentic** 🚀
+> *This project has been fully upgraded to a multi-agent LangGraph architecture, backed by PostgreSQL for idempotency, `pgvector` for semantic RAG memory, and optimized for local execution via Ollama (Llama 3.1 8B).*
+
+An autonomous, agentic code reviewer engineered to act as a virtual **Senior Application Security Engineer**. This system intercepts Pull Requests in real-time via GitHub Webhooks, analyzes code changes using high-speed LLMs, and publishes context-aware, batched reviews directly to GitHub.
 
 ---
 
 ## 🚀 Key Features
 
-- **⚡ Instant Feedback:** Powered by Groq for sub-second token generation.
-- **🛡️ Security Focused:** Specifically trained to hunt for the OWASP Top 10 (SQLi, XSS, Hardcoded Secrets, etc.).
-- **🤖 Structured Reasoning:** Uses Pydantic and `instructor` to enforce mathematical JSON compliance, eliminating AI hallucinations.
-- **📦 Batched Reviews:** Groups all findings into a single, professional GitHub Review to avoid notification fatigue.
+- **⚡ Fully Local & Private:** Powered by Ollama (`llama3.1-parallel`) to ensure your proprietary code never leaves your machine. (Easily swappable to Groq/OpenAI).
+- **🧠 Multi-Agent Orchestration:** Utilizes LangGraph to coordinate specialized agents (Security, Performance, Style) and an Aggregator to deduplicate findings.
+- **📚 Codebase-Aware Memory:** Uses `pgvector` and `fastembed` to semantically chunk and inject historical context into the prompt (RAG).
+- **🛡️ Idempotent Processing:** Backed by PostgreSQL to guarantee that webhooks are processed exactly once, preventing duplicate PR reviews.
+- **📊 Automated Eval Pipeline:** Includes a complete 20-scenario mathematical evaluation suite (`scripts/run_evals.py`) to grade the LLM's accuracy across false positives, security flaws, and style bugs.
 - **🔐 Cryptographic Security:** Validates every incoming request using HMAC SHA-256 signature verification.
 
 ---
@@ -17,19 +21,20 @@ An autonomous, agentic code reviewer engineered to act as a virtual **Senior App
 ## 🛠️ Technology Stack
 
 - **Backend:** FastAPI (Python 3.13+)
-- **AI Engine:** Groq (Llama-3.3-70b-versatile)
-- **Validation:** Pydantic / Instructor
+- **Database:** PostgreSQL (with `pgvector` extension) & Alembic
+- **Orchestration:** LangGraph (Multi-Agent framework)
+- **AI Engine:** Ollama (Llama-3.1 8B) / OpenAI API compatible
+- **Embeddings:** `fastembed` (BAAI/bge-small-en-v1.5)
 - **Auth:** GitHub App (JWT & RSA)
-- **Networking:** HTTPX (Async)
-- **Security:** HMAC, Hashlib
 
 ---
 
 ## 📋 Prerequisites
 
 - **Python 3.11+**
-- **ngrok** (for local testing)
-- **Groq API Key**
+- **PostgreSQL** (with `pgvector` extension installed)
+- **Ollama** (for local testing with `llama3.1`) or a Groq/OpenAI API key
+- **ngrok** (for local webhook testing)
 - **GitHub App** (Permissions: `Pull requests: Read/Write`, `Contents: Read-only`)
 
 ---
@@ -58,9 +63,19 @@ GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
 ... (multi-line key content)
 -----END RSA PRIVATE KEY-----"
 
-# AI Engine
-LLM_API_KEY="gsk_your_groq_key"
-LLM_MODEL_NAME="llama-3.3-70b-versatile"
+# Database
+DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5432/pr_reviewer"
+
+# AI Engine (Local Ollama Example)
+OLLAMA_BASE_URL="http://localhost:11434/v1"
+LLM_API_KEY="ollama"
+LLM_MODEL_NAME="llama3.1-parallel"
+```
+
+### 3. Database Migrations
+Initialize the PostgreSQL schema and `pgvector` tables:
+```bash
+alembic upgrade head
 ```
 
 ---
